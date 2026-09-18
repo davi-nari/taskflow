@@ -9,5 +9,10 @@ export const router = createRouter({
       name: 'Dashboard',
       component: Dashboard,
     },
+    {
+      path: '/tasks',
+      name: 'Tasks',
+      component: () => import('@/views/Tasks.vue'),
+    },
   ],
 })
