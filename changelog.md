@@ -1,3 +1,9 @@
+## v1.6.1
+- Исправлено создание и проверка manager-ссылки в Supabase: pgcrypto-функции теперь явно вызываются из schema `extensions`.
+- SECURITY DEFINER RPC закреплены с пустым search_path.
+- Settings теперь показывает реальную ошибку Supabase вместо пустого поля ссылки.
+- Production manager URL остаётся https://taskflowus.netlify.app/manager/<token>.
+
 # Changelog
 
 ## 1.6.0

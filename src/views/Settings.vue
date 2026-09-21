@@ -178,6 +178,10 @@
         </button>
       </div>
 
+      <div v-if="managerError" class="mt-4 rounded-xl border border-red-500/25 bg-red-500/5 px-4 py-3 text-xs leading-5 text-red-300">
+        {{ managerError }}
+      </div>
+
       <div class="mt-4 rounded-xl border border-emerald-500/15 bg-emerald-500/5 px-4 py-3 text-xs leading-5 text-emerald-200/80">
         Ссылка работает через Supabase и доступна руководителю с любого устройства. Рабочие сессии и паузы не входят в публичный payload.
       </div>
@@ -244,6 +248,7 @@ const categoryError = ref('')
 const managerToken = ref('')
 const managerCopied = ref(false)
 const managerLoading = ref(false)
+const managerError = ref('')
 const userEmail = ref('')
 const workdayStart = ref('10:00')
 const workdayEnd = ref('18:00')
@@ -328,9 +333,12 @@ const regenerateManagerLink = async () => {
   if (!window.confirm('Старая ссылка перестанет работать. Перевыпустить доступ?')) return
 
   managerLoading.value = true
+  managerError.value = ''
   try {
     managerToken.value = await rotateManagerAccessToken()
     managerCopied.value = false
+  } catch (error) {
+    managerError.value = error?.message || 'Не удалось создать ссылку через Supabase.'
   } finally {
     managerLoading.value = false
   }
@@ -353,8 +361,11 @@ onMounted(async () => {
   userEmail.value = user?.email || ''
 
   managerLoading.value = true
+  managerError.value = ''
   try {
     managerToken.value = await ensureManagerAccessToken()
+  } catch (error) {
+    managerError.value = error?.message || 'Не удалось получить ссылку через Supabase.'
   } finally {
     managerLoading.value = false
   }

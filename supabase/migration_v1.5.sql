@@ -22,7 +22,7 @@ create or replace function public.taskflow_create_manager_link()
 returns text
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   raw_token text;
@@ -35,10 +35,10 @@ begin
     set active = false, revoked_at = now()
     where user_id = auth.uid() and active = true;
 
-  raw_token := encode(gen_random_bytes(32), 'hex');
+  raw_token := encode(extensions.gen_random_bytes(32), 'hex');
 
   insert into public.taskflow_manager_links (user_id, token_hash)
-  values (auth.uid(), encode(digest(raw_token, 'sha256'), 'hex'));
+  values (auth.uid(), encode(extensions.digest(raw_token, 'sha256'), 'hex'));
 
   return raw_token;
 end;
@@ -48,7 +48,7 @@ create or replace function public.taskflow_manager_snapshot(p_token text)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   owner_id uuid;
@@ -58,7 +58,7 @@ begin
   select user_id into owner_id
   from public.taskflow_manager_links
   where active = true
-    and token_hash = encode(digest(coalesce(p_token, ''), 'sha256'), 'hex')
+    and token_hash = encode(extensions.digest(coalesce(p_token, ''), 'sha256'), 'hex')
   limit 1;
 
   if owner_id is null then

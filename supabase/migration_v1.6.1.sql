@@ -1,10 +1,35 @@
--- TaskFlow v1.5.0 -> v1.6.0 workday migration
--- Run once in Supabase SQL Editor after migration_v1.5.sql.
+-- TaskFlow v1.6.1 manager-link hotfix
+-- Run once in Supabase SQL Editor after v1.6.0.
+-- Supabase installs pgcrypto in the `extensions` schema, so SECURITY DEFINER
+-- functions must reference those functions explicitly.
 
-alter table public.taskflow_settings
-  add column if not exists workday_start text not null default '10:00',
-  add column if not exists workday_end text not null default '18:00',
-  add column if not exists last_workday_ended_at timestamptz;
+create extension if not exists pgcrypto with schema extensions;
+
+create or replace function public.taskflow_create_manager_link()
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  raw_token text;
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+
+  update public.taskflow_manager_links
+    set active = false, revoked_at = now()
+    where user_id = auth.uid() and active = true;
+
+  raw_token := encode(extensions.gen_random_bytes(32), 'hex');
+
+  insert into public.taskflow_manager_links (user_id, token_hash)
+  values (auth.uid(), encode(extensions.digest(raw_token, 'sha256'), 'hex'));
+
+  return raw_token;
+end;
+$$;
 
 create or replace function public.taskflow_manager_snapshot(p_token text)
 returns jsonb
@@ -109,4 +134,8 @@ begin
 end;
 $$;
 
+revoke execute on function public.taskflow_create_manager_link() from public, anon;
+grant execute on function public.taskflow_create_manager_link() to authenticated;
+
+revoke execute on function public.taskflow_manager_snapshot(text) from public;
 grant execute on function public.taskflow_manager_snapshot(text) to anon, authenticated;
