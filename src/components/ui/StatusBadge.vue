@@ -1,14 +1,17 @@
 <template>
   <span
     :class="[
-      'inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium',
+      'inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap',
       currentStyle.wrapper,
       currentStyle.text,
     ]"
   >
-    <span class="w-2 h-2 rounded-full" :class="currentStyle.dot" />
+    <span
+      :class="['h-2 w-2 shrink-0 rounded-full', currentStyle.dot]"
+      aria-hidden="true"
+    />
 
-    {{ label }}
+    {{ displayLabel }}
   </span>
 </template>
 
@@ -29,39 +32,34 @@ const props = defineProps({
 
 const styles = {
   todo: {
-    wrapper: 'bg-gray-100',
-
-    text: 'text-gray-600',
-
-    dot: 'bg-gray-400',
+    wrapper: 'bg-[#F1F3F6]',
+    text: 'text-[#4E5969]',
+    dot: 'bg-[#8B98AA]',
+    label: 'К выполнению',
   },
 
   progress: {
-    wrapper: 'bg-blue-100',
-
-    text: 'text-blue-600',
-
-    dot: 'bg-blue-500',
+    wrapper: 'bg-[#E7F0FF]',
+    text: 'text-[#2F6FEB]',
+    dot: 'bg-[#3278F6]',
+    label: 'В работе',
   },
 
   paused: {
-    wrapper: 'bg-orange-100',
-
-    text: 'text-orange-600',
-
-    dot: 'bg-orange-500',
+    wrapper: 'bg-[#FFF0DC]',
+    text: 'text-[#E78318]',
+    dot: 'bg-[#FF8A00]',
+    label: 'Приостановлена',
   },
 
   done: {
-    wrapper: 'bg-green-100',
-
-    text: 'text-green-600',
-
-    dot: 'bg-green-500',
+    wrapper: 'bg-[#E5F7EA]',
+    text: 'text-[#178A48]',
+    dot: 'bg-[#1FA45B]',
+    label: 'Готово',
   },
 }
 
-const currentStyle = computed(() => {
-  return styles[props.type] || styles.todo
-})
+const currentStyle = computed(() => styles[props.type] || styles.todo)
+const displayLabel = computed(() => props.label || currentStyle.value.label)
 </script>

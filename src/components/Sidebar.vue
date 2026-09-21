@@ -1,11 +1,11 @@
 <template>
-  <aside class="flex flex-col items-start max-w-65 w-full h-screen p-4">
+  <aside class="app-sidebar flex flex-col items-start max-w-65 w-full h-screen p-4">
     <!-- Logo -->
     <div class="flex w-full items-center justify-between mb-9">
       <RouterLink to="/" class="text-2xl font-bold">
         Task<span class="text-[#FFFF00]">Flow</span>
       </RouterLink>
-      <span class="text-sm text-gray-400">1.0.0</span>
+      <span class="text-sm text-gray-400">1.5.0</span>
     </div>
 
     <!-- Navigation -->

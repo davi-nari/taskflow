@@ -38,3 +38,26 @@ body {
 .custom-scroll::-webkit-scrollbar-thumb:hover {
   background: #444;
 }
+
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    padding: 0 !important;
+  }
+  .app-shell {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .app-sidebar {
+    display: none !important;
+  }
+  .app-main {
+    background: #ffffff !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+}
