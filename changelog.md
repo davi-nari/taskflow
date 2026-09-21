@@ -51,3 +51,10 @@
 - «Перевыпустить ссылку» теперь вызывает отдельный RPC и действительно отзывает все предыдущие токены перед созданием нового.
 - На публичной manager-странице сетевые/RPC ошибки теперь показываются отдельно от реально недействительного токена.
 - Добавлена миграция `supabase/migration_v1.6.2.sql`.
+
+
+## v1.7.0
+- Added Google Sheets export foundation.
+- Added export flags for actions.
+- Added Supabase Edge Function skeleton for Google Sheets API.
+- Target sheet: TaskFlow, schedule: 18:20 Asia/Tashkent.
