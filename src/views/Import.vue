@@ -36,11 +36,31 @@
 
 <script setup>
 import { ref } from 'vue'
+import { getSupabaseSession } from '../data/supabaseApi'
 const rows = ref(0)
 const message = ref('')
 const query = ref('')
 
-function exportToday() {
-  message.value = 'Экспорт подготовлен. После подключения Supabase Edge Function данные будут отправлены в Google Sheets.'
+async function exportToday() {
+  try {
+    const session = await getSupabaseSession()
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/export-google-sheet`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({}),
+    })
+
+    const result = await response.json()
+    rows.value = result.rows || 0
+    message.value = result.success
+      ? `Экспорт завершён. Отправлено строк: ${result.rows || 0}`
+      : result.error || 'Ошибка экспорта'
+  } catch (error) {
+    message.value = error.message
+  }
 }
 </script>
