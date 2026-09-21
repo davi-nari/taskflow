@@ -1,7 +1,7 @@
 import { isSupabaseConfigured } from '@/data/supabaseApi'
 import { loadPublicManagerSnapshot } from '@/data/supabaseRepository'
 import { getTasks, getWorkLocation } from '@/utils/taskStorage'
-import { getSettings } from '@/utils/settingsStorage'
+import { getSettings, isWorkdayEndedForDate } from '@/utils/settingsStorage'
 
 const loadLocalFallback = async (token) => {
   const settings = getSettings()
@@ -41,6 +41,9 @@ const loadLocalFallback = async (token) => {
     settings: {
       categories: settings.categories || [],
       schedule: settings.schedule || {},
+      workdayStart: settings.workdayStart || '10:00',
+      workdayEnd: settings.workdayEnd || '18:00',
+      workdayEndedToday: isWorkdayEndedForDate(),
     },
     todayLocation: getWorkLocation(),
   }

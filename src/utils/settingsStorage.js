@@ -5,6 +5,9 @@ const LEGACY_WORK_LOCATION_KEY = 'taskflow_work_location'
 const LEGACY_WORK_LOCATION_OVERRIDES_KEY = 'taskflow_work_location_overrides'
 const LEGACY_DAILY_MINIMUM_KEY = 'taskflow_daily_minimum'
 
+export const DEFAULT_WORKDAY_START = '10:00'
+export const DEFAULT_WORKDAY_END = '18:00'
+
 export const DEFAULT_SCHEDULE = {
   1: 'office',
   2: 'home',
@@ -19,6 +22,15 @@ const VALID_DAY_MODES = new Set(['home', 'office', 'off'])
 const VALID_LOCATIONS = new Set(['home', 'office'])
 
 const normalizeCategory = (value) => String(value || '').trim().replace(/\s+/g, ' ')
+const normalizeTime = (value, fallback) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || '')) ? String(value) : fallback
+
+export const localDateKey = (date = new Date()) => {
+  const value = new Date(date)
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 const readLegacyOverrides = () => {
   try {
@@ -74,6 +86,10 @@ export const normalizeSettings = (settings = {}) => {
     ) || 0,
   )
 
+  const workdayStart = normalizeTime(settings.workdayStart, DEFAULT_WORKDAY_START)
+  const workdayEnd = normalizeTime(settings.workdayEnd, DEFAULT_WORKDAY_END)
+  const lastWorkdayEndedAt = typeof settings.lastWorkdayEndedAt === 'string' ? settings.lastWorkdayEndedAt : ''
+
   return {
     categories,
     schedule,
@@ -81,6 +97,9 @@ export const normalizeSettings = (settings = {}) => {
     lastLocation,
     dailyMinimum,
     timezone,
+    workdayStart,
+    workdayEnd,
+    lastWorkdayEndedAt,
     // Kept only as a local convenience cache for the current manager URL.
     // Supabase stores only a hash of the public token.
     managerAccessToken: typeof settings.managerAccessToken === 'string' ? settings.managerAccessToken : '',
@@ -173,14 +192,6 @@ export const getDefaultLocationForDate = (date = new Date()) => {
   return mode === 'home' || mode === 'office' ? mode : null
 }
 
-const localDateKey = (date = new Date()) => {
-  const value = new Date(date)
-  const year = value.getFullYear()
-  const month = String(value.getMonth() + 1).padStart(2, '0')
-  const day = String(value.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 export const getLocationOverrideForDate = (date = new Date()) =>
   getSettings().locationOverrides[localDateKey(date)] || null
 
@@ -202,6 +213,48 @@ export const saveLocationOverride = (location, date = new Date()) => {
 }
 
 export const getLastLocation = () => getSettings().lastLocation || 'home'
+
+
+export const getWorkdayHours = () => {
+  const settings = getSettings()
+  return { start: settings.workdayStart, end: settings.workdayEnd }
+}
+
+export const updateWorkdayHours = (start, end) => {
+  const settings = getSettings()
+  return saveSettings({
+    ...settings,
+    workdayStart: normalizeTime(start, settings.workdayStart || DEFAULT_WORKDAY_START),
+    workdayEnd: normalizeTime(end, settings.workdayEnd || DEFAULT_WORKDAY_END),
+  })
+}
+
+export const markWorkdayEnded = (endedAt = new Date().toISOString()) => {
+  const settings = getSettings()
+  saveSettings({ ...settings, lastWorkdayEndedAt: endedAt })
+  return endedAt
+}
+
+export const clearWorkdayEnded = () => {
+  const settings = getSettings()
+  saveSettings({ ...settings, lastWorkdayEndedAt: '' })
+}
+
+export const isWorkdayEndedForDate = (date = new Date()) => {
+  const value = getSettings().lastWorkdayEndedAt
+  if (!value) return false
+  const ended = new Date(value)
+  if (Number.isNaN(ended.getTime())) return false
+  return localDateKey(ended) === localDateKey(date)
+}
+
+export const scheduledWorkdayEndForDate = (date = new Date()) => {
+  const { workdayEnd } = getSettings()
+  const [hours, minutes] = normalizeTime(workdayEnd, DEFAULT_WORKDAY_END).split(':').map(Number)
+  const value = new Date(date)
+  value.setHours(hours, minutes, 0, 0)
+  return value
+}
 
 export const getDailyMinimum = () => Math.max(0, Number(getSettings().dailyMinimum) || 0)
 

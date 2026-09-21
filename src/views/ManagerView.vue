@@ -43,6 +43,12 @@
               <div class="mb-5 flex flex-wrap items-center gap-2">
                 <span class="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">Сегодня</span>
                 <span class="rounded-full bg-[#222] px-3 py-1 text-xs text-gray-400">{{ todayLocationLabel }}</span>
+                <span
+                  v-if="settings?.workdayEndedToday"
+                  class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300"
+                >
+                  Рабочий день завершён
+                </span>
               </div>
 
               <template v-if="activeTask">
@@ -360,7 +366,7 @@ const route = useRoute()
 const loading = ref(true)
 const authorized = ref(false)
 const tasks = ref([])
-const settings = ref({ categories: [], schedule: {} })
+const settings = ref({ categories: [], schedule: {}, workdayStart: '10:00', workdayEnd: '18:00', workdayEndedToday: false })
 const todayLocation = ref(null)
 const evidencePage = ref(1)
 let refreshTimer = null
@@ -569,7 +575,7 @@ const refresh = async () => {
   const snapshot = await loadManagerSnapshot(String(route.params.token || ''))
   authorized.value = snapshot.authorized
   tasks.value = snapshot.tasks || []
-  settings.value = snapshot.settings || { categories: [], schedule: {} }
+  settings.value = snapshot.settings || { categories: [], schedule: {}, workdayStart: '10:00', workdayEnd: '18:00', workdayEndedToday: false }
   todayLocation.value = snapshot.todayLocation || null
   loading.value = false
 }

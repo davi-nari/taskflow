@@ -5,7 +5,7 @@
       <RouterLink to="/" class="text-2xl font-bold">
         Task<span class="text-[#FFFF00]">Flow</span>
       </RouterLink>
-      <span class="text-sm text-gray-400">1.5.0</span>
+      <span class="text-sm text-gray-400">1.6.0</span>
     </div>
 
     <!-- Navigation -->

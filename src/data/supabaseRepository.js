@@ -224,6 +224,9 @@ export const loadWorkspaceFromSupabase = async () => {
           lastLocation: row.last_location || 'home',
           dailyMinimum: Number(row.daily_minimum) || 0,
           timezone: row.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tashkent',
+          workdayStart: row.workday_start || '10:00',
+          workdayEnd: row.workday_end || '18:00',
+          lastWorkdayEndedAt: row.last_workday_ended_at || '',
         }
       : null,
   }
@@ -279,6 +282,9 @@ export const syncSettingsSnapshot = async (settings = {}) => {
     last_location: ['home', 'office'].includes(settings.lastLocation) ? settings.lastLocation : 'home',
     daily_minimum: Math.max(0, Number(settings.dailyMinimum) || 0),
     timezone: settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tashkent',
+    workday_start: settings.workdayStart || '10:00',
+    workday_end: settings.workdayEnd || '18:00',
+    last_workday_ended_at: settings.lastWorkdayEndedAt || null,
     updated_at: new Date().toISOString(),
   }], { onConflict: 'user_id' })
 

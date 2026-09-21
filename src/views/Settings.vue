@@ -54,6 +54,25 @@
         <div class="mt-4 rounded-xl border border-[#2C2C2C] bg-[#101010] px-4 py-3 text-xs text-gray-500">
           Базовый график уже выставлен: <span class="text-gray-300">Пн и Ср - офис, Вт, Чт и Пт - дом, Сб и Вс - выходные.</span>
         </div>
+
+        <div class="mt-4 rounded-xl border border-[#2C2C2C] bg-[#101010] p-4">
+          <div class="mb-3">
+            <div class="text-sm font-medium text-gray-300">Рабочие часы</div>
+            <div class="mt-1 text-xs text-gray-600">Используются как стандартный график и для восстановления незакрытых сессий.</div>
+          </div>
+          <div class="flex flex-wrap items-end gap-3">
+            <label>
+              <span class="mb-1.5 block text-xs text-gray-600">Начало</span>
+              <input v-model="workdayStart" type="time" class="rounded-lg border border-[#363636] bg-[#0B0B0B] px-3 py-2 text-sm text-white outline-none focus:border-blue-500" />
+            </label>
+            <label>
+              <span class="mb-1.5 block text-xs text-gray-600">Конец</span>
+              <input v-model="workdayEnd" type="time" class="rounded-lg border border-[#363636] bg-[#0B0B0B] px-3 py-2 text-sm text-white outline-none focus:border-blue-500" />
+            </label>
+            <button type="button" class="rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:bg-gray-200" @click="saveWorkdayHours">Сохранить</button>
+          </div>
+          <div v-if="workdaySaved" class="mt-2 text-xs text-emerald-400">Рабочие часы сохранены.</div>
+        </div>
       </div>
 
       <div class="rounded-2xl border border-[#303030] bg-[#151515] p-6">
@@ -196,6 +215,7 @@ import {
   removeCategory,
   syncCategoriesFromTasks,
   updateSchedule,
+  updateWorkdayHours,
 } from '@/utils/settingsStorage'
 
 const router = useRouter()
@@ -225,10 +245,14 @@ const managerToken = ref('')
 const managerCopied = ref(false)
 const managerLoading = ref(false)
 const userEmail = ref('')
+const workdayStart = ref('10:00')
+const workdayEnd = ref('18:00')
+const workdaySaved = ref(false)
+const publicBaseUrl = (import.meta.env.VITE_PUBLIC_APP_URL || 'https://taskflowus.netlify.app').replace(/\/+$/, '')
 
 const managerLink = computed(() => {
   if (!managerToken.value || typeof window === 'undefined') return ''
-  return `${window.location.origin}/manager/${managerToken.value}`
+  return `${publicBaseUrl}/manager/${managerToken.value}`
 })
 
 const usageMap = computed(() => {
@@ -248,6 +272,14 @@ const setDayMode = (day, mode) => {
   schedule[day] = mode
   const saved = updateSchedule({ ...schedule })
   Object.assign(schedule, saved)
+}
+
+const saveWorkdayHours = () => {
+  const saved = updateWorkdayHours(workdayStart.value, workdayEnd.value)
+  workdayStart.value = saved.workdayStart
+  workdayEnd.value = saved.workdayEnd
+  workdaySaved.value = true
+  window.setTimeout(() => { workdaySaved.value = false }, 1600)
 }
 
 const createCategory = () => {
@@ -313,7 +345,10 @@ const logout = async () => {
 onMounted(async () => {
   tasks.value = getTasks()
   categories.value = syncCategoriesFromTasks(tasks.value)
-  Object.assign(schedule, getSettings().schedule)
+  const currentSettings = getSettings()
+  Object.assign(schedule, currentSettings.schedule)
+  workdayStart.value = currentSettings.workdayStart || '10:00'
+  workdayEnd.value = currentSettings.workdayEnd || '18:00'
   const user = await getCurrentUser()
   userEmail.value = user?.email || ''
 

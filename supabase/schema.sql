@@ -1,4 +1,4 @@
--- TaskFlow Supabase schema (v1.5.0)
+-- TaskFlow Supabase schema (v1.6.0)
 -- Safe to run on a new Supabase project.
 
 create extension if not exists pgcrypto;
@@ -13,6 +13,9 @@ create table if not exists public.taskflow_settings (
   last_location text not null default 'home' check (last_location in ('home','office')),
   daily_minimum numeric not null default 0,
   timezone text not null default 'Asia/Tashkent',
+  workday_start text not null default '10:00',
+  workday_end text not null default '18:00',
+  last_workday_ended_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -21,7 +24,10 @@ alter table public.taskflow_settings
   add column if not exists location_overrides jsonb not null default '{}'::jsonb,
   add column if not exists last_location text not null default 'home',
   add column if not exists daily_minimum numeric not null default 0,
-  add column if not exists timezone text not null default 'Asia/Tashkent';
+  add column if not exists timezone text not null default 'Asia/Tashkent',
+  add column if not exists workday_start text not null default '10:00',
+  add column if not exists workday_end text not null default '18:00',
+  add column if not exists last_workday_ended_at timestamptz;
 
 create table if not exists public.taskflow_tasks (
   id text primary key,
@@ -209,14 +215,23 @@ begin
       select jsonb_build_object(
         'schedule', s.schedule,
         'categories', s.categories,
-        'timezone', s.timezone
+        'timezone', s.timezone,
+        'workdayStart', s.workday_start,
+        'workdayEnd', s.workday_end,
+        'workdayEndedToday', case
+          when s.last_workday_ended_at is null then false
+          else (s.last_workday_ended_at at time zone owner_timezone)::date = (now() at time zone owner_timezone)::date
+        end
       )
       from public.taskflow_settings s
       where s.user_id = owner_id
     ), jsonb_build_object(
       'schedule', '{}'::jsonb,
       'categories', '[]'::jsonb,
-      'timezone', owner_timezone
+      'timezone', owner_timezone,
+      'workdayStart', '10:00',
+      'workdayEnd', '18:00',
+      'workdayEndedToday', false
     )),
     'tasks', coalesce((
       select jsonb_agg(
