@@ -1,4 +1,4 @@
--- TaskFlow Supabase schema (v1.6.0)
+-- TaskFlow Supabase schema (v1.6.2)
 -- Safe to run on a new Supabase project.
 
 create extension if not exists pgcrypto;
@@ -279,3 +279,59 @@ $$;
 
 grant execute on function public.taskflow_manager_snapshot(text) to anon, authenticated;
 grant execute on function public.taskflow_create_manager_link() to authenticated;
+
+
+-- v1.6.2: stable manager links across multiple app origins (e.g. localhost + Netlify).
+-- Creating a link no longer revokes links cached on another trusted origin.
+create or replace function public.taskflow_create_manager_link()
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  raw_token text;
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+
+  raw_token := encode(extensions.gen_random_bytes(32), 'hex');
+
+  insert into public.taskflow_manager_links (user_id, token_hash, active, revoked_at)
+  values (auth.uid(), encode(extensions.digest(raw_token, 'sha256'), 'hex'), true, null);
+
+  return raw_token;
+end;
+$$;
+
+create or replace function public.taskflow_rotate_manager_link()
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  raw_token text;
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required';
+  end if;
+
+  update public.taskflow_manager_links
+    set active = false, revoked_at = now()
+    where user_id = auth.uid() and active = true;
+
+  raw_token := encode(extensions.gen_random_bytes(32), 'hex');
+
+  insert into public.taskflow_manager_links (user_id, token_hash, active, revoked_at)
+  values (auth.uid(), encode(extensions.digest(raw_token, 'sha256'), 'hex'), true, null);
+
+  return raw_token;
+end;
+$$;
+
+revoke execute on function public.taskflow_create_manager_link() from public, anon;
+grant execute on function public.taskflow_create_manager_link() to authenticated;
+revoke execute on function public.taskflow_rotate_manager_link() from public, anon;
+grant execute on function public.taskflow_rotate_manager_link() to authenticated;

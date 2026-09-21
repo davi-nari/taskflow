@@ -66,3 +66,6 @@ npm run dev
 ## Графики
 
 ApexCharts подключён в `index.html` и используется в Analytics и read-only странице руководителя.
+
+### Обновление до v1.6.2
+Если база уже настроена на v1.6.1, выполните в Supabase SQL Editor файл `supabase/migration_v1.6.2.sql`. После нового deploy Netlify откройте Settings и один раз нажмите «Перевыпустить ссылку». Новая ссылка должна иметь вид `https://taskflowus.netlify.app/manager/<token>`.

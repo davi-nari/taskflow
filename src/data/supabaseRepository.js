@@ -308,6 +308,11 @@ export const createManagerAccessToken = async () => {
   return typeof payload === 'string' ? payload : String(payload || '')
 }
 
+export const rotateManagerAccessTokenRemote = async () => {
+  const payload = await rpcAuthenticated('taskflow_rotate_manager_link')
+  return typeof payload === 'string' ? payload : String(payload || '')
+}
+
 export const loadPublicManagerSnapshot = async (token) => {
   const payload = await rpcPublic('taskflow_manager_snapshot', { p_token: token })
   return payload || { authorized: false }

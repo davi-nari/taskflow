@@ -4,6 +4,23 @@
       <div class="text-sm text-gray-500">Загрузка отчёта...</div>
     </div>
 
+    <div v-else-if="loadError" class="grid min-h-screen place-items-center px-6">
+      <div class="w-full max-w-lg rounded-2xl border border-[#303030] bg-[#141414] p-8 text-center">
+        <div class="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-full bg-amber-500/10 text-amber-300">
+          <ShieldX class="h-5 w-5" />
+        </div>
+        <h1 class="text-xl font-semibold">Не удалось загрузить отчёт</h1>
+        <p class="mt-3 text-sm leading-6 text-gray-500">{{ loadError }}</p>
+        <button
+          type="button"
+          class="mt-5 rounded-lg border border-[#3A3A3A] px-4 py-2.5 text-sm text-gray-300 transition hover:bg-[#202020]"
+          @click="refresh"
+        >
+          Повторить
+        </button>
+      </div>
+    </div>
+
     <div v-else-if="!authorized" class="grid min-h-screen place-items-center px-6">
       <div class="w-full max-w-lg rounded-2xl border border-[#303030] bg-[#141414] p-8 text-center">
         <div class="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-full bg-red-500/10 text-red-400">
@@ -365,6 +382,7 @@ const EVIDENCE_PAGE_SIZE = 25
 const route = useRoute()
 const loading = ref(true)
 const authorized = ref(false)
+const loadError = ref('')
 const tasks = ref([])
 const settings = ref({ categories: [], schedule: {}, workdayStart: '10:00', workdayEnd: '18:00', workdayEndedToday: false })
 const todayLocation = ref(null)
@@ -572,8 +590,10 @@ watch(
 )
 
 const refresh = async () => {
+  loadError.value = ''
   const snapshot = await loadManagerSnapshot(String(route.params.token || ''))
-  authorized.value = snapshot.authorized
+  loadError.value = snapshot.error || ''
+  authorized.value = Boolean(snapshot.authorized)
   tasks.value = snapshot.tasks || []
   settings.value = snapshot.settings || { categories: [], schedule: {}, workdayStart: '10:00', workdayEnd: '18:00', workdayEndedToday: false }
   todayLocation.value = snapshot.todayLocation || null

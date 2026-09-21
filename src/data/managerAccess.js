@@ -1,5 +1,5 @@
 import { isSupabaseConfigured } from '@/data/supabaseApi'
-import { createManagerAccessToken, loadPublicManagerSnapshot } from '@/data/supabaseRepository'
+import { createManagerAccessToken, loadPublicManagerSnapshot, rotateManagerAccessTokenRemote } from '@/data/supabaseRepository'
 import {
   cacheManagerAccessToken,
   clearCachedManagerAccessToken,
@@ -27,7 +27,7 @@ export const ensureManagerAccessToken = async () => {
 }
 
 export const rotateManagerAccessToken = async () => {
-  const token = await createManagerAccessToken()
+  const token = await rotateManagerAccessTokenRemote()
   cacheManagerAccessToken(token)
   return token
 }

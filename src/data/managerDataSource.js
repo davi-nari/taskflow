@@ -54,9 +54,15 @@ export const loadManagerSnapshot = async (token) => {
 
   try {
     const payload = await loadPublicManagerSnapshot(token)
-    return payload || { authorized: false, tasks: [], settings: null, todayLocation: null }
+    return payload || { authorized: false, tasks: [], settings: null, todayLocation: null, error: null }
   } catch (error) {
     console.error('[TaskFlow] Failed to load manager snapshot:', error)
-    return { authorized: false, tasks: [], settings: null, todayLocation: null }
+    return {
+      authorized: false,
+      tasks: [],
+      settings: null,
+      todayLocation: null,
+      error: error?.message || 'Не удалось получить данные из Supabase.',
+    }
   }
 }
