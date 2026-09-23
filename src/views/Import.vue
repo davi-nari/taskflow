@@ -29,17 +29,58 @@
     <div class="rounded-xl border border-[#303030] bg-[#151515] p-5">
       <h2 class="font-medium mb-3">Поиск действий</h2>
       <input v-model="query" class="w-full rounded-lg bg-[#101010] border border-[#333] px-4 py-3" placeholder="Ссылка, заголовок страницы, задача, категория" />
-      <div class="mt-4 text-sm text-gray-400">Поиск подготовлен для действий из TaskFlow.</div>
+      <div class="mt-4 space-y-2">
+        <div v-if="query && searchResults.length" class="space-y-2">
+          <a
+            v-for="item in searchResults"
+            :key="item.id"
+            :href="item.url || '#'"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block rounded-lg border border-[#2d2d2d] bg-[#101010] p-3 hover:border-blue-500/40"
+          >
+            <div class="text-sm text-white">{{ item.pageTitle || item.taskTitle || 'Действие' }}</div>
+            <div class="mt-1 text-xs text-gray-500">
+              {{ item.taskTitle }} · {{ item.type }} · {{ item.url || 'Без ссылки' }}
+            </div>
+          </a>
+        </div>
+        <div v-else-if="query" class="text-sm text-gray-500">Ничего не найдено.</div>
+        <div v-else class="text-sm text-gray-400">Поиск подготовлен для действий из TaskFlow.</div>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { getSupabaseSession } from '../data/supabaseApi'
+import { getTasks } from '../utils/taskStorage'
+
 const rows = ref(0)
 const message = ref('')
 const query = ref('')
+
+const searchResults = computed(() => {
+  const value = query.value.trim().toLowerCase()
+  if (!value) return []
+
+  return getTasks()
+    .flatMap((task) => (task.actions || []).map((action) => ({
+      ...action,
+      taskTitle: task.title,
+      id: `${task.id}-${action.id}`,
+    })))
+    .filter((item) => [
+      item.url,
+      item.pageTitle,
+      item.taskTitle,
+      item.category,
+      item.type,
+      item.action,
+    ].join(' ').toLowerCase().includes(value))
+    .slice(0, 20)
+})
 
 async function exportToday() {
   try {
