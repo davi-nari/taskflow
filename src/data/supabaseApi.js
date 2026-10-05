@@ -194,8 +194,35 @@ const request = async (
   return payload
 }
 
-export const restSelect = (table, query = '') =>
-  request(`/rest/v1/${table}${query ? `?${query}` : ''}`)
+export const restSelect = (table, query = '', { range = null } = {}) =>
+  request(`/rest/v1/${table}${query ? `?${query}` : ''}`, {
+    headers: range
+      ? {
+          'Range-Unit': 'items',
+          Range: `${range.from}-${range.to}`,
+        }
+      : {},
+  })
+
+// PostgREST/Supabase projects commonly cap a single SELECT response (often at 1000 rows).
+// Workspace tables can grow past that very quickly, especially taskflow_actions. Fetching in
+// explicit ranges keeps reloads deterministic instead of silently hydrating only the oldest page.
+export const restSelectAll = async (table, query = '', { pageSize = 500 } = {}) => {
+  const size = Math.max(1, Math.min(1000, Number(pageSize) || 500))
+  const rows = []
+
+  for (let from = 0; ; from += size) {
+    const page = await restSelect(table, query, {
+      range: { from, to: from + size - 1 },
+    })
+    const items = Array.isArray(page) ? page : []
+    rows.push(...items)
+
+    if (items.length < size) break
+  }
+
+  return rows
+}
 
 export const restUpsert = (table, rows, { onConflict = 'id' } = {}) => {
   if (!rows?.length) return Promise.resolve(null)

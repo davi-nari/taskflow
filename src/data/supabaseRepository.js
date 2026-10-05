@@ -3,6 +3,7 @@ import {
   isSupabaseConfigured,
   restDelete,
   restSelect,
+  restSelectAll,
   restUpsert,
   rpcAuthenticated,
   rpcPublic,
@@ -174,7 +175,7 @@ const deleteIds = async (table, ids) => {
 
 const ensureIdCache = async (key) => {
   if (idCache[key] instanceof Set) return idCache[key]
-  const rows = await restSelect(TABLES[key], 'select=id')
+  const rows = await restSelectAll(TABLES[key], 'select=id&order=id.asc')
   idCache[key] = new Set((rows || []).map((row) => row.id))
   return idCache[key]
 }
@@ -198,10 +199,10 @@ export const loadWorkspaceFromSupabase = async () => {
   if (!user) return { tasks: [], settings: null }
 
   const [tasks, actions, sessions, breaks, settingsRows] = await Promise.all([
-    restSelect(TABLES.tasks, 'select=*&order=updated_at.desc'),
-    restSelect(TABLES.actions, 'select=*&order=created_at.asc'),
-    restSelect(TABLES.sessions, 'select=*&order=started_at.asc'),
-    restSelect(TABLES.breaks, 'select=*&order=started_at.asc'),
+    restSelectAll(TABLES.tasks, 'select=*&order=updated_at.desc,id.asc'),
+    restSelectAll(TABLES.actions, 'select=*&order=created_at.asc,id.asc'),
+    restSelectAll(TABLES.sessions, 'select=*&order=started_at.asc,id.asc'),
+    restSelectAll(TABLES.breaks, 'select=*&order=started_at.asc,id.asc'),
     restSelect(TABLES.settings, 'select=*'),
   ])
 

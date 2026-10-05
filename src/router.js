@@ -33,6 +33,11 @@ export const router = createRouter({
       component: () => import('@/views/Analytics.vue'),
     },
     {
+      path: '/time-history',
+      name: 'TimeHistory',
+      component: () => import('@/views/TimeHistory.vue'),
+    },
+    {
       path: '/import',
       name: 'Import',
       component: () => import('@/views/Import.vue'),

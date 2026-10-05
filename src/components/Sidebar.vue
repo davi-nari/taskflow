@@ -59,6 +59,11 @@ const menuItems = [
     icon: BarChart3,
   },
   {
+    name: 'История времени',
+    path: '/time-history',
+    icon: FileInput,
+  },
+  {
     name: 'Import',
     path: '/import',
     icon: Import,
